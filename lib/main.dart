@@ -43,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
               new Container(
                 decoration: new BoxDecoration(
                   color: Colors.blue,
+                  borderRadius: new BorderRadius.circular(8.0),
                 ),
                 child: new ListCycleWidget(
                   widgetList: _sampleWidgetList(),
