@@ -1,2 +1,0 @@
-- npm にパブリッシュする
-- GitHub Actions CI をセットアップする
