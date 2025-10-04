@@ -144,13 +144,13 @@ const server = new Server(
 const tools: Tool[] = [
 	{
 		name: "synthesize",
-		description: "Synthesize speech from text using VOICEPEAK",
+		description: "Synthesize speech from text using VOICEPEAK (max 140 characters per synthesis)",
 		inputSchema: {
 			type: "object",
 			properties: {
 				text: {
 					type: "string",
-					description: "Text to synthesize",
+					description: "Text to synthesize (max 140 characters)",
 				},
 				narrator: {
 					type: "string",
@@ -204,13 +204,13 @@ const tools: Tool[] = [
 	},
 	{
 		name: "synthesize_and_play",
-		description: "Synthesize speech from text and immediately play it",
+		description: "Synthesize speech from text and immediately play it (max 140 characters per synthesis)",
 		inputSchema: {
 			type: "object",
 			properties: {
 				text: {
 					type: "string",
-					description: "Text to synthesize and play",
+					description: "Text to synthesize and play (max 140 characters)",
 				},
 				narrator: {
 					type: "string",
