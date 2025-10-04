@@ -1,10 +1,15 @@
 #!/usr/bin/env bun
 
 // Script to set up VOICEPEAK dictionary with common programming terms
-import { dictionaryManager, COMMON_PROGRAMMING_TERMS } from "../src/dictionary.js";
+import {
+	COMMON_PROGRAMMING_TERMS,
+	dictionaryManager,
+} from "../src/dictionary.js";
 
 async function main() {
-	console.log("Setting up VOICEPEAK dictionary with common programming terms...");
+	console.log(
+		"Setting up VOICEPEAK dictionary with common programming terms...",
+	);
 
 	try {
 		// Get existing entries
@@ -29,7 +34,9 @@ async function main() {
 		console.log(`\n✅ Setup complete!`);
 		console.log(`   Added: ${addedCount} new terms`);
 		console.log(`   Skipped: ${skippedCount} existing terms`);
-		console.log(`   Total: ${existing.length + addedCount} entries in dictionary`);
+		console.log(
+			`   Total: ${existing.length + addedCount} entries in dictionary`,
+		);
 
 		console.log(`\nDictionary location: ${dictionaryManager.getPath()}`);
 	} catch (error) {

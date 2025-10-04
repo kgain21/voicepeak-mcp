@@ -1,5 +1,5 @@
-import { processManager } from "./process-manager.js";
 import { getVoicepeakPath } from "./os.js";
+import { processManager } from "./process-manager.js";
 
 /**
  * Cache for available narrators with automatic refresh

@@ -5,10 +5,14 @@ import {
 	ListToolsRequestSchema,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
+import {
+	COMMON_PROGRAMMING_TERMS,
+	type DictionaryEntry,
+	dictionaryManager,
+} from "./dictionary.js";
 import { ErrorCode, handleToolError, VoicepeakError } from "./errors.js";
-import { dictionaryManager, COMMON_PROGRAMMING_TERMS, type DictionaryEntry } from "./dictionary.js";
 import { narratorCache } from "./narrator-cache.js";
-import { getVoicepeakPath, getPlayCommand, getPlayArgs } from "./os.js";
+import { getPlayArgs, getPlayCommand, getVoicepeakPath } from "./os.js";
 import { processManager } from "./process-manager.js";
 import { synthesisQueue } from "./synthesis-queue.js";
 import { tempFileManager } from "./temp-file-manager.js";
@@ -144,7 +148,8 @@ const server = new Server(
 const tools: Tool[] = [
 	{
 		name: "synthesize",
-		description: "Synthesize speech from text using VOICEPEAK (max 140 characters per synthesis)",
+		description:
+			"Synthesize speech from text using VOICEPEAK (max 140 characters per synthesis)",
 		inputSchema: {
 			type: "object",
 			properties: {
@@ -204,7 +209,8 @@ const tools: Tool[] = [
 	},
 	{
 		name: "synthesize_and_play",
-		description: "Synthesize speech from text and immediately play it (max 140 characters per synthesis)",
+		description:
+			"Synthesize speech from text and immediately play it (max 140 characters per synthesis)",
 		inputSchema: {
 			type: "object",
 			properties: {

@@ -1,7 +1,7 @@
 // OS-specific configurations and utilities
 import * as os from "node:os";
 import * as path from "node:path";
-import { VoicepeakError, ErrorCode } from "./errors.js";
+import { ErrorCode, VoicepeakError } from "./errors.js";
 
 type Platform = "darwin" | "win32" | "linux";
 

@@ -1,8 +1,8 @@
 // Dictionary management for VOICEPEAK pronunciation customization
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
-import { getDictionaryPath } from "./os.js";
 import { ErrorCode, VoicepeakError } from "./errors.js";
+import { getDictionaryPath } from "./os.js";
 
 export interface DictionaryEntry {
 	sur: string; // Surface form (the text to be replaced)
@@ -90,7 +90,8 @@ export class DictionaryManager {
 
 		// Check if entry already exists
 		const existingIndex = entries.findIndex(
-			(e) => e.sur === entry.sur && e.lang === (entry.lang || DEFAULT_ENTRY.lang),
+			(e) =>
+				e.sur === entry.sur && e.lang === (entry.lang || DEFAULT_ENTRY.lang),
 		);
 
 		if (existingIndex >= 0) {
