@@ -1,36 +1,39 @@
 # voicepeak-mcp
 
-MCP server for VOICEPEAK text-to-speech synthesis.
+[English](./README.en.md)
 
-## Features
+VOICEPEAK テキスト読み上げ機能のための MCP サーバー。
 
-- Text-to-speech synthesis with VOICEPEAK
-- Multiple narrator support
-- Emotion parameter control
-- Speech speed and pitch adjustment
-- Direct audio playback
+## 特徴
 
-## Prerequisites
+- VOICEPEAK を使用したテキスト読み上げ合成
+- 複数のナレーター対応
+- 感情パラメータ制御
+- 話速とピッチの調整
+- 音声の直接再生
+- 発音辞書管理
 
-- VOICEPEAK installed on macOS
-- Node.js 18+ or Bun runtime
-- Valid VOICEPEAK license
+## 前提条件
 
-## Installation
+- macOS に VOICEPEAK がインストールされていること
+- Node.js 18+ または Bun ランタイム
+- 有効な VOICEPEAK ライセンス
 
-### Using NPX (Recommended)
+## インストール
+
+### NPX を使用（推奨）
 ```bash
 npx voicepeak-mcp@latest
 ```
 
-### Using Bunx
+### Bunx を使用
 ```bash
 bunx voicepeak-mcp
 ```
 
-## Configuration
+## 設定
 
-Add to your Claude Desktop configuration:
+Claude Desktop の設定に追加：
 
 ```json
 {
@@ -43,64 +46,68 @@ Add to your Claude Desktop configuration:
 }
 ```
 
-## Available Tools
+## 利用可能なツール
 
 ### synthesize
-Generate speech audio file from text.
+テキストから音声ファイルを生成します（最大140文字）。
 
-Parameters:
-- `text` (required): Text to synthesize
-- `narrator`: Narrator name
-- `emotion`: Emotion parameters
-- `speed`: Speech speed (50-200)
-- `pitch`: Speech pitch (-300 to 300)
-- `outputPath`: Output file path
+パラメータ:
+- `text`（必須）: 合成するテキスト
+- `narrator`: ナレーター名
+- `emotion`: 感情パラメータ
+- `speed`: 話速（50-200）
+- `pitch`: ピッチ（-300〜300）
+- `outputPath`: 出力ファイルパス
 
 ### synthesize_and_play
-Generate and immediately play speech.
+音声を生成して即座に再生します（最大140文字）。
 
 ### play
-Play an audio file.
+音声ファイルを再生します。
 
 ### list_narrators
-List available narrators.
+利用可能なナレーターをリストします。
 
 ### list_emotions
-List available emotions for a narrator.
+ナレーターの利用可能な感情をリストします。
 
 ### dictionary_list
-List all pronunciation dictionary entries.
+全ての発音辞書エントリをリストします。
 
 ### dictionary_add
-Add or update a dictionary entry for custom pronunciation.
+カスタム発音のための辞書エントリを追加または更新します。
 
-Parameters:
-- `surface` (required): Text to be replaced
-- `pronunciation` (required): Japanese kana pronunciation
-- `priority`: Priority (0-10, default: 5)
+パラメータ:
+- `surface`（必須）: 置き換えるテキスト
+- `pronunciation`（必須）: 日本語かなでの発音
+- `priority`: 優先度（0-10、デフォルト: 5）
 
 ### dictionary_remove
-Remove a dictionary entry.
+辞書エントリを削除します。
 
 ### dictionary_find
-Find dictionary entries by text.
+テキストで辞書エントリを検索します。
 
 ### dictionary_clear
-Clear all dictionary entries.
+全ての辞書エントリをクリアします。
 
 ### dictionary_add_common
-Add 100+ common programming terms to the dictionary.
+100以上の一般的なプログラミング用語を辞書に追加します。
 
-## Supported Platforms
+## 対応プラットフォーム
 
 - ✅ macOS
-- 🚧 Windows (planned)
-- 🚧 Linux (planned)
+- 🚧 Windows（予定）
+- 🚧 Linux（予定）
 
-## License
+## ライセンス
 
 MIT
 
-## Contributing
+## 貢献
 
-Issues and pull requests are welcome!
+イシューやプルリクエストを歓迎します！
+
+## リポジトリ
+
+https://github.com/k2wanko/voicepeak-mcp
