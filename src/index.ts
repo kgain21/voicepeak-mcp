@@ -6,6 +6,7 @@ import {
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { ErrorCode, handleToolError, VoicepeakError } from "./errors.js";
+import { narratorCache } from "./narrator-cache.js";
 import { processManager } from "./process-manager.js";
 import { tempFileManager } from "./temp-file-manager.js";
 import {
@@ -19,7 +20,6 @@ import {
 	ValidationError,
 	validateAudioFilePath,
 	validateEmotionParams,
-	validateNarrator,
 	validateOutputPath,
 	validatePitch,
 	validateSpeed,
@@ -41,7 +41,7 @@ async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
 	// Validate all inputs
 	const sanitizedText = sanitizeText(options.text);
 
-	if (options.narrator && !validateNarrator(options.narrator)) {
+	if (options.narrator && !(await narratorCache.isValidNarrator(options.narrator))) {
 		throw new ValidationError(
 			`Invalid narrator: ${options.narrator}`,
 			"INVALID_NARRATOR",
@@ -315,7 +315,7 @@ server.setRequestHandler(
 					const options = args as unknown as ListEmotionsOptions;
 
 					// Validate narrator
-					if (!validateNarrator(options.narrator)) {
+					if (!(await narratorCache.isValidNarrator(options.narrator))) {
 						throw new ValidationError(
 							`Invalid narrator: ${options.narrator}`,
 							"INVALID_NARRATOR",

@@ -3,7 +3,7 @@
 import { promises as fs } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import { CONFIG, type Narrator, VALID_NARRATORS } from "./types.js";
+import { CONFIG } from "./types.js";
 
 export class ValidationError extends Error {
 	constructor(
@@ -43,13 +43,7 @@ export function sanitizeText(text: string): string {
 	);
 }
 
-/**
- * Validates narrator name against whitelist
- */
-export function validateNarrator(narrator: string | undefined): boolean {
-	if (!narrator) return true; // Optional field
-	return VALID_NARRATORS.includes(narrator as Narrator);
-}
+// Narrator validation is now handled by narrator-cache.ts
 
 /**
  * Sanitizes emotion key to prevent injection

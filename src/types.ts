@@ -1,13 +1,4 @@
-// Type definitions for VOICEPEAK MCP Server
-
-export const VALID_NARRATORS = [
-	"Tohoku Zunko",
-	"Zundamon",
-	"Tohoku Kiritan",
-	"Tohoku Itako",
-] as const;
-
-export type Narrator = (typeof VALID_NARRATORS)[number];
+export type Narrator = string; // Dynamic narrator type
 
 export type EmotionParams = Record<string, number>;
 
