@@ -89,7 +89,7 @@ Find dictionary entries by text.
 Clear all dictionary entries.
 
 ### dictionary_add_common
-Add 100+ common programming terms to the dictionary.
+Add common technical and programming terms to the dictionary in bulk.
 
 ## Supported Platforms
 
