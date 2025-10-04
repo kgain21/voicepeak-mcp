@@ -1,25 +1,45 @@
 // Error handling utilities
 
-export enum ErrorCode {
+export type ErrorCode =
 	// Validation errors
-	INVALID_TEXT = "INVALID_TEXT",
-	INVALID_NARRATOR = "INVALID_NARRATOR",
-	INVALID_FILE_PATH = "INVALID_FILE_PATH",
-	PATH_TRAVERSAL_ATTEMPT = "PATH_TRAVERSAL_ATTEMPT",
-
+	| "INVALID_TEXT"
+	| "INVALID_NARRATOR"
+	| "INVALID_FILE_PATH"
+	| "PATH_TRAVERSAL_ATTEMPT"
 	// Process errors
-	PROCESS_TIMEOUT = "PROCESS_TIMEOUT",
-	PROCESS_FAILED = "PROCESS_FAILED",
-	TOO_MANY_PROCESSES = "TOO_MANY_PROCESSES",
-
+	| "PROCESS_TIMEOUT"
+	| "PROCESS_FAILED"
+	| "TOO_MANY_PROCESSES"
+	| "SYNTHESIS_FAILED"
 	// File system errors
-	FILE_NOT_FOUND = "FILE_NOT_FOUND",
-	FILE_WRITE_ERROR = "FILE_WRITE_ERROR",
-	TEMP_FILE_ERROR = "TEMP_FILE_ERROR",
-
+	| "FILE_NOT_FOUND"
+	| "FILE_WRITE_ERROR"
+	| "TEMP_FILE_ERROR"
+	// Queue errors
+	| "QUEUE_CLEARED"
 	// Unknown errors
-	UNKNOWN_ERROR = "UNKNOWN_ERROR",
-}
+	| "UNKNOWN_ERROR";
+
+export const ErrorCode = {
+	// Validation errors
+	INVALID_TEXT: "INVALID_TEXT" as const,
+	INVALID_NARRATOR: "INVALID_NARRATOR" as const,
+	INVALID_FILE_PATH: "INVALID_FILE_PATH" as const,
+	PATH_TRAVERSAL_ATTEMPT: "PATH_TRAVERSAL_ATTEMPT" as const,
+	// Process errors
+	PROCESS_TIMEOUT: "PROCESS_TIMEOUT" as const,
+	PROCESS_FAILED: "PROCESS_FAILED" as const,
+	TOO_MANY_PROCESSES: "TOO_MANY_PROCESSES" as const,
+	SYNTHESIS_FAILED: "SYNTHESIS_FAILED" as const,
+	// File system errors
+	FILE_NOT_FOUND: "FILE_NOT_FOUND" as const,
+	FILE_WRITE_ERROR: "FILE_WRITE_ERROR" as const,
+	TEMP_FILE_ERROR: "TEMP_FILE_ERROR" as const,
+	// Queue errors
+	QUEUE_CLEARED: "QUEUE_CLEARED" as const,
+	// Unknown errors
+	UNKNOWN_ERROR: "UNKNOWN_ERROR" as const,
+} as const;
 
 export class VoicepeakError extends Error {
 	constructor(

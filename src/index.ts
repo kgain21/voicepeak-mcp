@@ -42,7 +42,10 @@ async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
 	// Validate all inputs
 	const sanitizedText = sanitizeText(options.text);
 
-	if (options.narrator && !(await narratorCache.isValidNarrator(options.narrator))) {
+	if (
+		options.narrator &&
+		!(await narratorCache.isValidNarrator(options.narrator))
+	) {
 		throw new ValidationError(
 			`Invalid narrator: ${options.narrator}`,
 			"INVALID_NARRATOR",
@@ -102,7 +105,7 @@ async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
 				if (attempt === MAX_RETRIES) {
 					throw new VoicepeakError(
 						`Failed to synthesize after ${MAX_RETRIES} attempts: ${error}`,
-						"SYNTHESIS_FAILED",
+						ErrorCode.SYNTHESIS_FAILED,
 					);
 				}
 
@@ -114,7 +117,7 @@ async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
 		// Should never reach here, but TypeScript needs this
 		throw new VoicepeakError(
 			"Unexpected error in synthesis retry logic",
-			"SYNTHESIS_FAILED",
+			ErrorCode.SYNTHESIS_FAILED,
 		);
 	};
 

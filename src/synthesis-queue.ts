@@ -1,9 +1,9 @@
-import { VoicepeakError } from "./errors.js";
+import { ErrorCode, VoicepeakError } from "./errors.js";
 
 interface QueueItem {
 	execute: () => Promise<string>;
 	resolve: (value: string) => void;
-	reject: (reason: any) => void;
+	reject: (reason: unknown) => void;
 }
 
 export class SynthesisQueue {
@@ -75,9 +75,7 @@ export class SynthesisQueue {
 	clear(): void {
 		// Reject all pending items
 		for (const item of this.queue) {
-			item.reject(
-				new VoicepeakError("Queue cleared", "QUEUE_CLEARED"),
-			);
+			item.reject(new VoicepeakError("Queue cleared", ErrorCode.QUEUE_CLEARED));
 		}
 		this.queue = [];
 	}
