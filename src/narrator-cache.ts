@@ -1,5 +1,5 @@
 import { processManager } from "./process-manager.js";
-import { CONFIG } from "./types.js";
+import { getVoicepeakPath } from "./os.js";
 
 /**
  * Cache for available narrators with automatic refresh
@@ -61,7 +61,7 @@ export class NarratorCache {
 	 */
 	private async fetchNarrators(): Promise<Set<string>> {
 		try {
-			const output = await processManager.spawn(CONFIG.VOICEPEAK.PATH, [
+			const output = await processManager.spawn(getVoicepeakPath(), [
 				"--list-narrator",
 			]);
 

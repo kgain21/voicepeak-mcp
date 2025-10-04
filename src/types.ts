@@ -27,7 +27,7 @@ export interface SynthesizeResult {
 
 export const CONFIG = {
 	VOICEPEAK: {
-		PATH: "/Applications/voicepeak.app/Contents/MacOS/voicepeak",
+		// PATH is now managed in os.ts for platform-specific configuration
 		SPEED: {
 			MIN: 50,
 			MAX: 200,

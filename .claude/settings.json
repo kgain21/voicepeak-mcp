@@ -1,0 +1,17 @@
+{
+	"$schema": "https://json.schemastore.org/claude-code-settings.json",
+	"hooks": {
+		"PostToolUse": [
+			{
+				"matcher": "Edit|Write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "if [[ \"$CLAUDE_RESULT_FILE_PATH\" == *.ts || \"$CLAUDE_RESULT_FILE_PATH\" == *.js || \"$CLAUDE_RESULT_FILE_PATH\" == *.tsx || \"$CLAUDE_RESULT_FILE_PATH\" == *.jsx ]]; then echo '🔧 Running bun fix...'; bun fix 2>/dev/null || true; echo '✅ Formatting completed'; fi",
+						"timeout": 10
+					}
+				]
+			}
+		]
+	}
+}

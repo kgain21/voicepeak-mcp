@@ -7,6 +7,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { ErrorCode, handleToolError, VoicepeakError } from "./errors.js";
 import { narratorCache } from "./narrator-cache.js";
+import { getVoicepeakPath, getPlayCommand, getPlayArgs } from "./os.js";
 import { processManager } from "./process-manager.js";
 import { synthesisQueue } from "./synthesis-queue.js";
 import { tempFileManager } from "./temp-file-manager.js";
@@ -28,13 +29,13 @@ import {
 
 // VOICEPEAK CLI wrapper with validation
 async function runVoicePeak(args: string[]): Promise<string> {
-	return processManager.spawn(CONFIG.VOICEPEAK.PATH, args);
+	return processManager.spawn(getVoicepeakPath(), args);
 }
 
 // Safe audio playback with validation
 async function playAudio(filePath: string): Promise<void> {
 	const validatedPath = await validateAudioFilePath(filePath);
-	await processManager.spawn("afplay", [validatedPath]);
+	await processManager.spawn(getPlayCommand(), getPlayArgs(validatedPath));
 }
 
 // Safe synthesis with all validations and queue/retry logic
