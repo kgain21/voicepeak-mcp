@@ -2,19 +2,9 @@
 
 MCP server for VOICEPEAK text-to-speech synthesis.
 
-## Features
-
-- Text-to-speech synthesis with VOICEPEAK
-- Multiple narrator support
-- Emotion parameter control
-- Speech speed and pitch adjustment
-- Direct audio playback
-
 ## Prerequisites
 
-- VOICEPEAK installed on macOS
-- Node.js 18+ or Bun runtime
-- Valid VOICEPEAK license
+- VOICEPEAK installed
 
 ## Installation
 
@@ -96,10 +86,6 @@ Add common technical and programming terms to the dictionary in bulk.
 - ✅ macOS
 - 🚧 Windows (planned)
 - 🚧 Linux (planned)
-
-## License
-
-MIT
 
 ## Contributing
 

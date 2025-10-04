@@ -4,20 +4,9 @@
 
 VOICEPEAK テキスト読み上げ機能のための MCP サーバー。
 
-## 特徴
-
-- VOICEPEAK を使用したテキスト読み上げ合成
-- 複数のナレーター対応
-- 感情パラメータ制御
-- 話速とピッチの調整
-- 音声の直接再生
-- 発音辞書管理
-
 ## 前提条件
 
-- macOS に VOICEPEAK がインストールされていること
-- Node.js 18+ または Bun ランタイム
-- 有効な VOICEPEAK ライセンス
+- VOICEPEAK がインストールされていること
 
 ## インストール
 
@@ -100,14 +89,6 @@ Claude Desktop の設定に追加：
 - 🚧 Windows（予定）
 - 🚧 Linux（予定）
 
-## ライセンス
-
-MIT
-
 ## 貢献
 
 イシューやプルリクエストを歓迎します！
-
-## リポジトリ
-
-https://github.com/k2wanko/voicepeak-mcp
