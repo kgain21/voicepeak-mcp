@@ -68,24 +68,6 @@ List available narrators.
 ### list_emotions
 List available emotions for a narrator.
 
-## Example Usage
-
-```javascript
-// Synthesize with Tohoku Zunko
-await synthesize({
-  text: "こんにちは、世界！",
-  narrator: "Tohoku Zunko",
-  emotion: { happy: 50 },
-  speed: 110
-});
-
-// List available narrators
-await list_narrators();
-
-// Play synthesized audio
-await play({ filePath: "/path/to/audio.wav" });
-```
-
 ## Supported Platforms
 
 - ✅ macOS

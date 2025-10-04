@@ -14,7 +14,8 @@
 		"lint": "biome check && tsc --noEmit",
 		"fix": "biome check --write . && tsc --noEmit",
 		"test": "bun test",
-		"prepublishOnly": "bun run build"
+		"prepublishOnly": "bun run build",
+		"prepare": "husky"
 	},
 	"keywords": [
 		"mcp",
@@ -28,7 +29,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "latest",
 		"@types/bun": "latest",
-		"@types/node": "^24.6.2"
+		"@types/node": "^24.6.2",
+		"husky": "^9.1.7"
 	},
 	"peerDependencies": {
 		"typescript": "latest"
