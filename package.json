@@ -24,8 +24,16 @@
 		"tts",
 		"modelcontextprotocol"
 	],
-	"author": "",
+	"author": "k2wanko",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/k2wanko/voicepeak-mcp.git"
+	},
+	"homepage": "https://github.com/k2wanko/voicepeak-mcp#readme",
+	"bugs": {
+		"url": "https://github.com/k2wanko/voicepeak-mcp/issues"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "latest",
 		"@types/bun": "latest",

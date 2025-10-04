@@ -68,6 +68,29 @@ List available narrators.
 ### list_emotions
 List available emotions for a narrator.
 
+### dictionary_list
+List all pronunciation dictionary entries.
+
+### dictionary_add
+Add or update a dictionary entry for custom pronunciation.
+
+Parameters:
+- `surface` (required): Text to be replaced
+- `pronunciation` (required): Japanese kana pronunciation
+- `priority`: Priority (0-10, default: 5)
+
+### dictionary_remove
+Remove a dictionary entry.
+
+### dictionary_find
+Find dictionary entries by text.
+
+### dictionary_clear
+Clear all dictionary entries.
+
+### dictionary_add_common
+Add 100+ common programming terms to the dictionary.
+
 ## Supported Platforms
 
 - ✅ macOS
