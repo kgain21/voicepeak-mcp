@@ -1,3 +1,0 @@
-- READMEを日本語にする（英語は README.en.md）
-- https://bun.com/docs/bundler/executables に従って各プラットフォーム向けのバイナリを作成して npm でプラットフォームごとにバイナリを直接わたせるようにします。これはNode.jsの依存をなくすための一歩です
-- github のリリースをトリガーに npm publish する Actions のワークフローを追加する
