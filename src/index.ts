@@ -8,6 +8,7 @@ import {
 import { ErrorCode, handleToolError, VoicepeakError } from "./errors.js";
 import { narratorCache } from "./narrator-cache.js";
 import { processManager } from "./process-manager.js";
+import { synthesisQueue } from "./synthesis-queue.js";
 import { tempFileManager } from "./temp-file-manager.js";
 import {
 	CONFIG,
@@ -36,7 +37,7 @@ async function playAudio(filePath: string): Promise<void> {
 	await processManager.spawn("afplay", [validatedPath]);
 }
 
-// Safe synthesis with all validations
+// Safe synthesis with all validations and queue/retry logic
 async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
 	// Validate all inputs
 	const sanitizedText = sanitizeText(options.text);
@@ -78,13 +79,47 @@ async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
 		voicepeakArgs.push("--pitch", validatedPitch.toString());
 	}
 
-	// Execute synthesis
-	await runVoicePeak(voicepeakArgs);
+	// Execute synthesis through queue with retry logic
+	const execute = async (): Promise<string> => {
+		const MAX_RETRIES = 5;
+		const RETRY_DELAY = 1000; // 1 second
 
-	// Ensure file was created
-	await tempFileManager.ensureExists(outputFile);
+		for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+			try {
+				console.log(
+					`[VoicePeak MCP] Synthesis attempt ${attempt}/${MAX_RETRIES}`,
+				);
+				await runVoicePeak(voicepeakArgs);
+				// Ensure file was created
+				await tempFileManager.ensureExists(outputFile);
+				return outputFile;
+			} catch (error) {
+				console.error(
+					`[VoicePeak MCP] Synthesis failed (attempt ${attempt}/${MAX_RETRIES}):`,
+					error,
+				);
 
-	return outputFile;
+				if (attempt === MAX_RETRIES) {
+					throw new VoicepeakError(
+						`Failed to synthesize after ${MAX_RETRIES} attempts: ${error}`,
+						"SYNTHESIS_FAILED",
+					);
+				}
+
+				// Wait before retrying
+				await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+			}
+		}
+
+		// Should never reach here, but TypeScript needs this
+		throw new VoicepeakError(
+			"Unexpected error in synthesis retry logic",
+			"SYNTHESIS_FAILED",
+		);
+	};
+
+	// Add to queue for sequential processing
+	return synthesisQueue.addToQueue(execute);
 }
 
 // Initialize MCP server
