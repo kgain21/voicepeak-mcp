@@ -1,2 +1,0 @@
-- 読み方の辞書を編集できる機能をmcp に足す `~/Library/Application Support/Dreamtonics/Voicepeak/settings/dic.json`
-- 英語とか正しく読み上げられないのでよく使いそうなものは辞書に登録しておく
