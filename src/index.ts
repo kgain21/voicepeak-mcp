@@ -1,8 +1,3 @@
-import { spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
-import { promises as fs } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -10,50 +5,89 @@ import {
 	ListToolsRequestSchema,
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
+import { ErrorCode, handleToolError, VoicepeakError } from "./errors.js";
+import { processManager } from "./process-manager.js";
+import { tempFileManager } from "./temp-file-manager.js";
+import {
+	CONFIG,
+	type ListEmotionsOptions,
+	type PlayOptions,
+	type SynthesizeOptions,
+} from "./types.js";
+import {
+	sanitizeText,
+	ValidationError,
+	validateAudioFilePath,
+	validateEmotionParams,
+	validateNarrator,
+	validateOutputPath,
+	validatePitch,
+	validateSpeed,
+} from "./validators.js";
 
-const VOICEPEAK_PATH = "/Applications/voicepeak.app/Contents/MacOS/voicepeak";
-
-// VOICEPEAKコマンドを実行するヘルパー関数
+// VOICEPEAK CLI wrapper with validation
 async function runVoicePeak(args: string[]): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const proc = spawn(VOICEPEAK_PATH, args);
-		let stdout = "";
-		let stderr = "";
-
-		proc.stdout.on("data", (data) => {
-			stdout += data.toString();
-		});
-
-		proc.stderr.on("data", (data) => {
-			stderr += data.toString();
-		});
-
-		proc.on("close", (code) => {
-			if (code !== 0) {
-				reject(new Error(`VoicePeak exited with code ${code}: ${stderr}`));
-			} else {
-				resolve(stdout);
-			}
-		});
-	});
+	return processManager.spawn(CONFIG.VOICEPEAK.PATH, args);
 }
 
-// 音声ファイルを再生する関数
+// Safe audio playback with validation
 async function playAudio(filePath: string): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const proc = spawn("afplay", [filePath]);
-
-		proc.on("close", (code) => {
-			if (code !== 0) {
-				reject(new Error(`Failed to play audio: ${code}`));
-			} else {
-				resolve();
-			}
-		});
-	});
+	const validatedPath = await validateAudioFilePath(filePath);
+	await processManager.spawn("afplay", [validatedPath]);
 }
 
-// MCPサーバーの初期化
+// Safe synthesis with all validations
+async function synthesizeSafe(options: SynthesizeOptions): Promise<string> {
+	// Validate all inputs
+	const sanitizedText = sanitizeText(options.text);
+
+	if (options.narrator && !validateNarrator(options.narrator)) {
+		throw new ValidationError(
+			`Invalid narrator: ${options.narrator}`,
+			"INVALID_NARRATOR",
+		);
+	}
+
+	const validatedEmotion = validateEmotionParams(options.emotion);
+	const validatedSpeed = validateSpeed(options.speed);
+	const validatedPitch = validatePitch(options.pitch);
+	const validatedOutputPath = validateOutputPath(options.outputPath);
+
+	// Create safe output path
+	const outputFile = validatedOutputPath || (await tempFileManager.create());
+
+	// Build safe command arguments
+	const voicepeakArgs = ["-s", sanitizedText, "-o", outputFile];
+
+	if (options.narrator) {
+		voicepeakArgs.push("-n", options.narrator);
+	}
+
+	if (validatedEmotion && Object.keys(validatedEmotion).length > 0) {
+		const emotionStr = Object.entries(validatedEmotion)
+			.map(([key, value]) => `${key}=${value}`)
+			.join(",");
+		voicepeakArgs.push("-e", emotionStr);
+	}
+
+	if (validatedSpeed !== CONFIG.VOICEPEAK.SPEED.DEFAULT) {
+		voicepeakArgs.push("--speed", validatedSpeed.toString());
+	}
+
+	if (validatedPitch !== CONFIG.VOICEPEAK.PITCH.DEFAULT) {
+		voicepeakArgs.push("--pitch", validatedPitch.toString());
+	}
+
+	// Execute synthesis
+	await runVoicePeak(voicepeakArgs);
+
+	// Ensure file was created
+	await tempFileManager.ensureExists(outputFile);
+
+	return outputFile;
+}
+
+// Initialize MCP server
 const server = new Server(
 	{
 		name: "voicepeak-mcp",
@@ -66,7 +100,7 @@ const server = new Server(
 	},
 );
 
-// 利用可能なツール定義
+// Tool definitions with proper types
 const tools: Tool[] = [
 	{
 		name: "synthesize",
@@ -193,189 +227,141 @@ const tools: Tool[] = [
 	},
 ];
 
-// ツールリストの取得
+// Register tools handler
 server.setRequestHandler(ListToolsRequestSchema, async () => {
 	return {
 		tools: tools,
 	};
 });
 
-// ツールの実行
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-	const { name, arguments: args } = request.params;
+// Handle tool execution with proper error handling
+server.setRequestHandler(
+	CallToolRequestSchema,
+	async (
+		request,
+	): Promise<{
+		content: Array<{ type: "text"; text: string }>;
+	}> => {
+		const { name, arguments: args } = request.params;
 
-	switch (name) {
-		case "synthesize": {
-			const {
-				text,
-				narrator,
-				emotion,
-				speed = 100,
-				pitch = 0,
-				outputPath,
-			} = args as {
-				text: string;
-				narrator?: string;
-				emotion?: Record<string, number>;
-				speed?: number;
-				pitch?: number;
-				outputPath?: string;
-			};
+		try {
+			switch (name) {
+				case "synthesize": {
+					const options = args as unknown as SynthesizeOptions;
+					const outputFile = await synthesizeSafe(options);
 
-			const outputFile =
-				outputPath || join(tmpdir(), `voicepeak_${randomUUID()}.wav`);
-			const voicepeakArgs = ["-s", text, "-o", outputFile];
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Speech synthesized successfully. Output file: ${outputFile}`,
+							},
+						],
+					};
+				}
 
-			if (narrator) {
-				voicepeakArgs.push("-n", narrator);
+				case "play": {
+					const options = args as unknown as PlayOptions;
+					await playAudio(options.filePath);
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Audio played successfully: ${options.filePath}`,
+							},
+						],
+					};
+				}
+
+				case "synthesize_and_play": {
+					const options = args as unknown as SynthesizeOptions;
+					const outputFile = await synthesizeSafe(options);
+
+					try {
+						await playAudio(outputFile);
+						return {
+							content: [
+								{
+									type: "text",
+									text: "Speech synthesized and played successfully",
+								},
+							],
+						};
+					} finally {
+						// Clean up temp file after playback
+						await tempFileManager.cleanup(outputFile);
+					}
+				}
+
+				case "list_narrators": {
+					const output = await runVoicePeak(["--list-narrator"]);
+					const narrators = output
+						.split("\n")
+						.filter((line) => line.trim() && !line.includes("[debug]"))
+						.map((line) => line.trim());
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Available narrators:\n${narrators.join("\n")}`,
+							},
+						],
+					};
+				}
+
+				case "list_emotions": {
+					const options = args as unknown as ListEmotionsOptions;
+
+					// Validate narrator
+					if (!validateNarrator(options.narrator)) {
+						throw new ValidationError(
+							`Invalid narrator: ${options.narrator}`,
+							"INVALID_NARRATOR",
+						);
+					}
+
+					const output = await runVoicePeak([
+						"--list-emotion",
+						options.narrator,
+					]);
+					const emotions = output
+						.split("\n")
+						.filter((line) => line.trim() && !line.includes("[debug]"))
+						.map((line) => line.trim());
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Available emotions for ${options.narrator}:\n${emotions.join("\n")}`,
+							},
+						],
+					};
+				}
+
+				default:
+					throw new VoicepeakError(
+						`Unknown tool: ${name}`,
+						ErrorCode.UNKNOWN_ERROR,
+					);
 			}
-
-			if (emotion && Object.keys(emotion).length > 0) {
-				const emotionStr = Object.entries(emotion)
-					.map(([key, value]) => `${key}=${value}`)
-					.join(",");
-				voicepeakArgs.push("-e", emotionStr);
-			}
-
-			if (speed !== 100) {
-				voicepeakArgs.push("--speed", speed.toString());
-			}
-
-			if (pitch !== 0) {
-				voicepeakArgs.push("--pitch", pitch.toString());
-			}
-
-			await runVoicePeak(voicepeakArgs);
-
-			return {
-				content: [
-					{
-						type: "text",
-						text: `Speech synthesized successfully. Output file: ${outputFile}`,
-					},
-				],
-			};
+		} catch (error) {
+			return handleToolError(error);
 		}
+	},
+);
 
-		case "play": {
-			const { filePath } = args as { filePath: string };
-
-			// Check if file exists
-			await fs.access(filePath);
-			await playAudio(filePath);
-
-			return {
-				content: [
-					{
-						type: "text",
-						text: `Audio played successfully: ${filePath}`,
-					},
-				],
-			};
-		}
-
-		case "synthesize_and_play": {
-			const {
-				text,
-				narrator,
-				emotion,
-				speed = 100,
-				pitch = 0,
-			} = args as {
-				text: string;
-				narrator?: string;
-				emotion?: Record<string, number>;
-				speed?: number;
-				pitch?: number;
-			};
-
-			const outputFile = join(tmpdir(), `voicepeak_${randomUUID()}.wav`);
-			const voicepeakArgs = ["-s", text, "-o", outputFile];
-
-			if (narrator) {
-				voicepeakArgs.push("-n", narrator);
-			}
-
-			if (emotion && Object.keys(emotion).length > 0) {
-				const emotionStr = Object.entries(emotion)
-					.map(([key, value]) => `${key}=${value}`)
-					.join(",");
-				voicepeakArgs.push("-e", emotionStr);
-			}
-
-			if (speed !== 100) {
-				voicepeakArgs.push("--speed", speed.toString());
-			}
-
-			if (pitch !== 0) {
-				voicepeakArgs.push("--pitch", pitch.toString());
-			}
-
-			await runVoicePeak(voicepeakArgs);
-			await playAudio(outputFile);
-
-			// Clean up temporary file
-			await fs.unlink(outputFile).catch(() => {}); // Ignore errors
-
-			return {
-				content: [
-					{
-						type: "text",
-						text: `Speech synthesized and played successfully`,
-					},
-				],
-			};
-		}
-
-		case "list_narrators": {
-			const output = await runVoicePeak(["--list-narrator"]);
-			const narrators = output
-				.split("\n")
-				.filter((line) => line.trim() && !line.includes("[debug]"))
-				.map((line) => line.trim());
-
-			return {
-				content: [
-					{
-						type: "text",
-						text: `Available narrators:\n${narrators.join("\n")}`,
-					},
-				],
-			};
-		}
-
-		case "list_emotions": {
-			const { narrator } = args as { narrator: string };
-			const output = await runVoicePeak(["--list-emotion", narrator]);
-			const emotions = output
-				.split("\n")
-				.filter((line) => line.trim() && !line.includes("[debug]"))
-				.map((line) => line.trim());
-
-			return {
-				content: [
-					{
-						type: "text",
-						text: `Available emotions for ${narrator}:\n${emotions.join("\n")}`,
-					},
-				],
-			};
-		}
-
-		default:
-			throw new Error(`Unknown tool: ${name}`);
-	}
-});
-
-// サーバーの起動
+// Main server startup
 async function main() {
 	const transport = new StdioServerTransport();
 	await server.connect(transport);
-	// Do not output anything to stderr in production mode
-	// console.error logs would interfere with stdio transport
+	// No console output in production to avoid stdio interference
 }
 
-main().catch((_error) => {
-	// In case of fatal error, exit silently
+// Start server with proper error handling
+main().catch((error) => {
+	console.error("[VoicePeak MCP] Fatal error:", error);
 	process.exit(1);
 });
