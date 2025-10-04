@@ -1,18 +1,47 @@
 {
-  "name": "voicepeak-mcp",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
-  "scripts": {
-    "lint": "biome check && tsc --noEmit",
-    "fix": "biome check --write . && tsc --noEmit",
-    "test": "bun test"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "latest",
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "latest"
-  }
+	"name": "voicepeak-mcp",
+	"version": "0.1.0",
+	"description": "MCP server for VOICEPEAK text-to-speech synthesis",
+	"main": "dist/index.js",
+	"module": "src/index.ts",
+	"type": "module",
+	"bin": {
+		"voicepeak-mcp": "./dist/index.js"
+	},
+	"scripts": {
+		"build": "bun build src/index.ts --outdir dist --target node",
+		"dev": "bun run src/index.ts",
+		"lint": "biome check && tsc --noEmit",
+		"fix": "biome check --write . && tsc --noEmit",
+		"test": "bun test",
+		"prepublishOnly": "bun run build"
+	},
+	"keywords": [
+		"mcp",
+		"voicepeak",
+		"text-to-speech",
+		"tts",
+		"modelcontextprotocol"
+	],
+	"author": "",
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "latest",
+		"@types/bun": "latest",
+		"@types/node": "^24.6.2"
+	},
+	"peerDependencies": {
+		"typescript": "latest"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.19.1"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"package.json"
+	],
+	"engines": {
+		"node": ">=18.0.0"
+	}
 }
