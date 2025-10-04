@@ -6,6 +6,7 @@ import {
 	type Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { ErrorCode, handleToolError, VoicepeakError } from "./errors.js";
+import { dictionaryManager, COMMON_PROGRAMMING_TERMS, type DictionaryEntry } from "./dictionary.js";
 import { narratorCache } from "./narrator-cache.js";
 import { getVoicepeakPath, getPlayCommand, getPlayArgs } from "./os.js";
 import { processManager } from "./process-manager.js";
@@ -264,6 +265,82 @@ const tools: Tool[] = [
 			required: ["narrator"],
 		},
 	},
+	{
+		name: "dictionary_list",
+		description: "List all dictionary entries",
+		inputSchema: {
+			type: "object",
+			properties: {},
+		},
+	},
+	{
+		name: "dictionary_add",
+		description: "Add or update a dictionary entry for custom pronunciation",
+		inputSchema: {
+			type: "object",
+			properties: {
+				surface: {
+					type: "string",
+					description: "The text to be replaced",
+				},
+				pronunciation: {
+					type: "string",
+					description: "The pronunciation in Japanese kana",
+				},
+				priority: {
+					type: "number",
+					description: "Priority (0-10, default: 5)",
+					minimum: 0,
+					maximum: 10,
+				},
+			},
+			required: ["surface", "pronunciation"],
+		},
+	},
+	{
+		name: "dictionary_remove",
+		description: "Remove a dictionary entry",
+		inputSchema: {
+			type: "object",
+			properties: {
+				surface: {
+					type: "string",
+					description: "The text to remove from dictionary",
+				},
+			},
+			required: ["surface"],
+		},
+	},
+	{
+		name: "dictionary_find",
+		description: "Find dictionary entries by surface form",
+		inputSchema: {
+			type: "object",
+			properties: {
+				surface: {
+					type: "string",
+					description: "The text to search for",
+				},
+			},
+			required: ["surface"],
+		},
+	},
+	{
+		name: "dictionary_clear",
+		description: "Clear all dictionary entries",
+		inputSchema: {
+			type: "object",
+			properties: {},
+		},
+	},
+	{
+		name: "dictionary_add_common",
+		description: "Add common programming terms to the dictionary",
+		inputSchema: {
+			type: "object",
+			properties: {},
+		},
+	},
 ];
 
 // Register tools handler
@@ -375,6 +452,154 @@ server.setRequestHandler(
 							{
 								type: "text",
 								text: `Available emotions for ${options.narrator}:\n${emotions.join("\n")}`,
+							},
+						],
+					};
+				}
+
+				case "dictionary_list": {
+					const entries = await dictionaryManager.readDictionary();
+					if (entries.length === 0) {
+						return {
+							content: [
+								{
+									type: "text",
+									text: "No dictionary entries found.",
+								},
+							],
+						};
+					}
+
+					const formatted = entries
+						.map(
+							(e) =>
+								`- ${e.sur} → ${e.pron} (priority: ${e.priority}, lang: ${e.lang})`,
+						)
+						.join("\n");
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Dictionary entries (${entries.length}):\n${formatted}`,
+							},
+						],
+					};
+				}
+
+				case "dictionary_add": {
+					const { surface, pronunciation, priority } = args as {
+						surface: string;
+						pronunciation: string;
+						priority?: number;
+					};
+
+					const entry: DictionaryEntry = {
+						sur: surface,
+						pron: pronunciation,
+						priority: priority ?? 5,
+					};
+
+					await dictionaryManager.addEntry(entry);
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Dictionary entry added/updated: ${surface} → ${pronunciation}`,
+							},
+						],
+					};
+				}
+
+				case "dictionary_remove": {
+					const { surface } = args as { surface: string };
+					const removed = await dictionaryManager.removeEntry(surface);
+
+					if (removed) {
+						return {
+							content: [
+								{
+									type: "text",
+									text: `Dictionary entry removed: ${surface}`,
+								},
+							],
+						};
+					}
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `No dictionary entry found for: ${surface}`,
+							},
+						],
+					};
+				}
+
+				case "dictionary_find": {
+					const { surface } = args as { surface: string };
+					const entries = await dictionaryManager.findEntry(surface);
+
+					if (entries.length === 0) {
+						return {
+							content: [
+								{
+									type: "text",
+									text: `No dictionary entries found for: ${surface}`,
+								},
+							],
+						};
+					}
+
+					const formatted = entries
+						.map(
+							(e) =>
+								`- ${e.sur} → ${e.pron} (priority: ${e.priority}, lang: ${e.lang})`,
+						)
+						.join("\n");
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Found ${entries.length} entries:\n${formatted}`,
+							},
+						],
+					};
+				}
+
+				case "dictionary_clear": {
+					await dictionaryManager.clearDictionary();
+					return {
+						content: [
+							{
+								type: "text",
+								text: "Dictionary cleared successfully.",
+							},
+						],
+					};
+				}
+
+				case "dictionary_add_common": {
+					// Get existing entries
+					const existing = await dictionaryManager.readDictionary();
+					const existingTerms = new Set(existing.map((e) => e.sur));
+
+					// Add only new terms
+					let addedCount = 0;
+					for (const term of COMMON_PROGRAMMING_TERMS) {
+						if (!existingTerms.has(term.sur)) {
+							await dictionaryManager.addEntry(term);
+							addedCount++;
+						}
+					}
+
+					return {
+						content: [
+							{
+								type: "text",
+								text: `Added ${addedCount} common programming terms to the dictionary (${COMMON_PROGRAMMING_TERMS.length - addedCount} already existed).`,
 							},
 						],
 					};
